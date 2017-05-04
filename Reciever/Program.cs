@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Data;
 using System.Threading.Tasks;
 using NHibernate.Cfg;
 using NHibernate.Dialect;
+using Ninject;
 using NServiceBus;
 using NServiceBus.Persistence;
+using Reciever;
 using Shared;
 using Configuration = NHibernate.Cfg.Configuration;
 
@@ -61,7 +64,40 @@ class Program
         endpointConfiguration.AuditProcessedMessagesTo("audit");
         endpointConfiguration.EnableInstallers();
 
-        
+        var kernel = new StandardKernel();
+        kernel.Bind<IOrderRepository>()
+            .To<OrderRepository>();
+
+
+
+        kernel.Bind<ContextHelper>().To<ContextHelper>().InSingletonScope();
+
+        endpointConfiguration.UseContainer<NinjectBuilder>(
+            customizations: customizations =>
+            {
+                customizations.ExistingKernel(kernel);
+            });
+
+      //  endpointConfiguration.RegisterComponents(x => x.ConfigureComponent<ContextHelper>(DependencyLifecycle.SingleInstance));
+
+        //endpointConfiguration.RegisterComponents(x=> x.ConfigureComponent<IDbTransaction> (c =>
+        //{
+        //    var ctx = c.Build<ContextHelper>();
+        //    return ctx.dbTransaction;
+
+        //},DependencyLifecycle.InstancePerUnitOfWork));
+
+        //endpointConfiguration.RegisterComponents(x => x.ConfigureComponent<DbConnection>(c =>
+        //{
+        //    var ctx = c.Build<ContextHelper>();
+        //    return ctx.dbconnection;
+
+        //}, DependencyLifecycle.InstancePerUnitOfWork));
+
+
+        endpointConfiguration.Pipeline.Register<BaseHandlingBehavior.Registration>();
+
+
         var endpointInstance = await Endpoint.Start(endpointConfiguration)
             .ConfigureAwait(false);
         try
