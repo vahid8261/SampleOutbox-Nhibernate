@@ -72,10 +72,10 @@ class Program
         kernel.Bind<IOrderRepository2>()
             .To<OrderRepository2>();
 
-        string connectionString =
-    @"Data Source = (localdb)\MSSQLLocalDB;Integrated Security = True; Persist Security Info=False;Initial Catalog = nservicebus";
+    //    string connectionString =
+    //@"Data Source = (localdb)\MSSQLLocalDB;Integrated Security = True; Persist Security Info=False;Initial Catalog = nservicebus";
 
-        kernel.Bind<IDbConnection>().ToConstant(new SqlConnection(connectionString));
+        //kernel.Bind<IDbConnection>().ToConstant(new SqlConnection(connectionString));
 
         endpointConfiguration.UseContainer<NinjectBuilder>(
             customizations: customizations =>
@@ -83,9 +83,9 @@ class Program
                 customizations.ExistingKernel(kernel);
             });
 
-        //endpointConfiguration.RegisterComponents(x => x.ConfigureComponent<ContextHelper>(DependencyLifecycle.SingleInstance));
+        endpointConfiguration.RegisterComponents(x => x.ConfigureComponent<ContextHelper>(DependencyLifecycle.InstancePerUnitOfWork));
 
-        //endpointConfiguration.Pipeline.Register<BaseHandlingBehavior.Registration>();
+        endpointConfiguration.Pipeline.Register<BaseHandlingBehavior.Registration>();
 
 
         var endpointInstance = await Endpoint.Start(endpointConfiguration)
