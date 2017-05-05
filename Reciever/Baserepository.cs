@@ -7,33 +7,26 @@ namespace Reciever
 {
     public abstract class BaseRepository<T, TR> : IBaseRepository<T, TR> where T : class, IBaseEntity<TR>
     {
-        protected readonly IDbConnection _connection ;
+        private readonly IDbConnection _connection ;
         private readonly IDbTransaction _dbTransaction ;
-
         private readonly ContextHelper _ctxHelper;
-
-        //protected BaseRepository(IDbTransaction dbTransaction)
-        //{
-        //    _connection = dbTransaction.Connection;
-        //    _dbTransaction = dbTransaction;
-        //}
 
         protected BaseRepository(ContextHelper ctxHelper)
         {
             _ctxHelper = ctxHelper;
-            _connection = _ctxHelper.dbConnection;
-            _dbTransaction = _ctxHelper.dbTransaction;
         }
 
-        //protected BaseRepository(IDbConnection connection)
-        //{
-        //    _connection = connection;
-        //}
+        protected BaseRepository(IDbConnection dbconnection)
+        {
+            _connection = dbconnection ;
+        }
+
+        protected IDbConnection Connection => _ctxHelper != null ?_ctxHelper.dbConnection : _connection;
+        protected IDbTransaction Transaction => _ctxHelper?.dbTransaction;
 
         public virtual async Task<int> Add(T item)
         {
-            return await _ctxHelper.dbConnection.InsertAsync(item, _ctxHelper.dbTransaction);
-            //return await _connection.InsertAsync(item);
+            return await Connection.InsertAsync(item, Transaction);
         }
 
         public virtual async Task<bool> Update(T item)

@@ -91,7 +91,9 @@
     <Compile Include="Baserepository.cs" />
     <Compile Include="BaseHandlingBehavior.cs" />
     <Compile Include="ContextHelper.cs" />
+    <Compile Include="OrderRepository2.cs" />
     <Compile Include="OrderRepository.cs" />
+    <Compile Include="OrderSubmittedHandler2.cs" />
     <Compile Include="OrderSubmittedHandler.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

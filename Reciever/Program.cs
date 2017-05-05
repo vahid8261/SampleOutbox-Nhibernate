@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.SqlClient;
 using System.Threading.Tasks;
 using NHibernate.Cfg;
 using NHibernate.Dialect;
@@ -68,9 +69,13 @@ class Program
         kernel.Bind<IOrderRepository>()
             .To<OrderRepository>();
 
+        kernel.Bind<IOrderRepository2>()
+            .To<OrderRepository2>();
 
+        string connectionString =
+    @"Data Source = (localdb)\MSSQLLocalDB;Integrated Security = True; Persist Security Info=False;Initial Catalog = nservicebus";
 
-        kernel.Bind<ContextHelper>().To<ContextHelper>().InSingletonScope();
+        kernel.Bind<IDbConnection>().ToConstant(new SqlConnection(connectionString));
 
         endpointConfiguration.UseContainer<NinjectBuilder>(
             customizations: customizations =>
@@ -78,24 +83,9 @@ class Program
                 customizations.ExistingKernel(kernel);
             });
 
-      //  endpointConfiguration.RegisterComponents(x => x.ConfigureComponent<ContextHelper>(DependencyLifecycle.SingleInstance));
+        //endpointConfiguration.RegisterComponents(x => x.ConfigureComponent<ContextHelper>(DependencyLifecycle.SingleInstance));
 
-        //endpointConfiguration.RegisterComponents(x=> x.ConfigureComponent<IDbTransaction> (c =>
-        //{
-        //    var ctx = c.Build<ContextHelper>();
-        //    return ctx.dbTransaction;
-
-        //},DependencyLifecycle.InstancePerUnitOfWork));
-
-        //endpointConfiguration.RegisterComponents(x => x.ConfigureComponent<DbConnection>(c =>
-        //{
-        //    var ctx = c.Build<ContextHelper>();
-        //    return ctx.dbconnection;
-
-        //}, DependencyLifecycle.InstancePerUnitOfWork));
-
-
-        endpointConfiguration.Pipeline.Register<BaseHandlingBehavior.Registration>();
+        //endpointConfiguration.Pipeline.Register<BaseHandlingBehavior.Registration>();
 
 
         var endpointInstance = await Endpoint.Start(endpointConfiguration)

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Data.Common;
 using System.Threading.Tasks;
 using NHibernate;
 using NServiceBus;
@@ -10,7 +9,7 @@ namespace Reciever
 {
     public class BaseHandlingBehavior : Behavior<IInvokeHandlerContext>
     {
-        public override async  Task Invoke(IInvokeHandlerContext context, Func<Task> next)
+        public override async Task Invoke(IInvokeHandlerContext context, Func<Task> next)
         {
             var ctx = context.Builder.Build<ContextHelper>();
             ctx.dbTransaction = ExtractTransactionFromSession(context.SynchronizedStorageSession.Session());

@@ -10,16 +10,16 @@ using Shared;
 
 namespace Reciever
 {
-    public class OrderSubmittedHandler : IHandleMessages<OrderSubmitted>
+    public class OrderSubmittedHandler2 : IHandleMessages<OrderSubmitted>
     {
-        private IOrderRepository _orderrepository;
-        static ILog log = LogManager.GetLogger<OrderSubmittedHandler>();
+        private IOrderRepository2 _orderrepository;
+        static ILog log = LogManager.GetLogger<OrderSubmittedHandler2>();
         private Random ChaosGenerator = new Random();
 
         string connectionString =
             @"Data Source = (localdb)\MSSQLLocalDB;Integrated Security = True; Persist Security Info=False;Initial Catalog = nservicebus";
 
-        public OrderSubmittedHandler(IOrderRepository orderrepository)
+        public OrderSubmittedHandler2(IOrderRepository2 orderrepository)
         {
             _orderrepository = orderrepository;
         }
@@ -29,7 +29,7 @@ namespace Reciever
              log.Info($"Order {context.MessageId} worth {message.Value} submitted");
 
             #region StoreUserData
-            var orderAccepted = new Order()
+            var orderAccepted = new Order2()
             {
                 OrderId = new Guid(context.MessageId),
                 Value = message.Value
@@ -37,10 +37,12 @@ namespace Reciever
 
             await _orderrepository.Add(orderAccepted);
 
-            if (ChaosGenerator.Next(2) == 0)
-            {
-                throw new Exception("Boom!");
-            }
+
+           // throw new Exception("Boom!");
+            //if (ChaosGenerator.Next(2) == 0)
+            //{
+            //    throw new Exception("Boom!");
+            //}
 
 
             #endregion
