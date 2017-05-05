@@ -19,7 +19,7 @@ namespace Reciever
         string connectionString =
             @"Data Source = (localdb)\MSSQLLocalDB;Integrated Security = True; Persist Security Info=False;Initial Catalog = nservicebus";
 
-        public OrderSubmittedHandler2(IOrderRepository2 orderrepository)
+        public OrderSubmittedHandler2(IOrderRepository2 orderrepository) 
         {
             _orderrepository = orderrepository;
         }

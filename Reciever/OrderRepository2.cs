@@ -15,10 +15,10 @@ namespace Reciever
     }
 
     public interface IOrderRepository2 : IBaseRepository<Order2, Guid>
-    {
+    { 
     }
-
-    public class Order2 : IBaseEntity<Guid>
+     
+    public class Order2 : IBaseEntity<Guid> 
     {
         public Guid OrderId { get; set; }
         public string Value { get; set; }
