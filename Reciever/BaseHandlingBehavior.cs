@@ -1,5 +1,7 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Data;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using NHibernate;
 using NServiceBus;
@@ -9,12 +11,20 @@ namespace Reciever
 {
     public class BaseHandlingBehavior : Behavior<IInvokeHandlerContext>
     {
+        //private ContextHelper _contextHelper;
+        public BaseHandlingBehavior(ContextHelper contextHelper)
+        {
+        //    _contextHelper = contextHelper;
+        }
+
         public override async Task Invoke(IInvokeHandlerContext context, Func<Task> next)
         {
-            var ctx = context.Builder.Build<ContextHelper>();
-            ctx.dbTransaction = ExtractTransactionFromSession(context.SynchronizedStorageSession.Session());
-            ctx.dbConnection =  context.SynchronizedStorageSession.Session().Connection;
+            //_contextHelper = _contextHelper ?? context.Builder.Build<ContextHelper>();
+            var _contextHelper = context.Builder.Build<ContextHelper>();
+            _contextHelper.SetDbTransaction(ExtractTransactionFromSession(context.SynchronizedStorageSession.Session()));
+            _contextHelper.setDbConnection(context.SynchronizedStorageSession.Session().Connection);
             await next().ConfigureAwait(false);
+        //    context.Builder.Release(_contextHelper);    
 
         }
 
@@ -32,8 +42,59 @@ namespace Reciever
             using (var helper = storageContext.Connection.CreateCommand())
             {
                 storageContext.Transaction.Enlist(helper);
-                return helper.Transaction;
+                return  helper.Transaction;
             }
         }
+    }
+
+    public class ContextHelper : INotifyPropertyChanged
+    {
+        public ContextHelper()
+        {
+            //_dbConnection = new SqlConnection();
+            var rnd = new Random();
+            Ref = new Ref()
+            {
+                RefNumber = rnd.Next(1000)
+            };
+            //dbTransaction = DbTransaction;
+        }
+
+        private IDbConnection _dbConnection;
+        public IDbConnection getDbConnection()
+        {
+            return _dbConnection;
+        }
+        public void setDbConnection(IDbConnection dbConnection)
+        {
+            _dbConnection = dbConnection;
+            OnPropertyChanged("DbTransaction");
+        }
+
+        private IDbTransaction _dbTransaction;
+        public IDbTransaction GetDbTransaction()
+        {
+            return _dbTransaction;
+        }
+        public void SetDbTransaction(IDbTransaction dbTransaction)
+        {
+            _dbTransaction = dbTransaction;
+        }
+
+        //public DbConnection DbConnection { get; set; }
+        //public DbTransaction DbTransaction { get; set; }
+
+        public Ref Ref;
+       
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
+    public class Ref
+    {
+        public int RefNumber { get; set; }
     }
 }

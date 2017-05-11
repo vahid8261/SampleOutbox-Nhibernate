@@ -1,11 +1,15 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Data;
+using System.Data.Odbc;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
+using Autofac;
 using NHibernate.Cfg;
 using NHibernate.Dialect;
 using Ninject;
 using NServiceBus;
+using NServiceBus.ObjectBuilder.Ninject;
 using NServiceBus.Persistence;
 using Reciever;
 using Shared;
@@ -69,24 +73,89 @@ class Program
         kernel.Bind<IOrderRepository>()
             .To<OrderRepository>();
 
-        kernel.Bind<IOrderRepository2>()
-            .To<OrderRepository2>();
+        //kernel.Bind<ContextHelper>().To<ContextHelper>().WhenInUnitOfWork().InUnitOfWorkScope();
+        //kernel.Bind<ContextHelper>().ToSelf()
+        //            .WhenInUnitOfWork()
+        //            .InUnitOfWorkScope();
 
-    //    string connectionString =
-    //@"Data Source = (localdb)\MSSQLLocalDB;Integrated Security = True; Persist Security Info=False;Initial Catalog = nservicebus";
+        //kernel.Bind<IOrderRepository2>()
+        //    .To<OrderRepository2>();
+
+        //    string connectionString =
+        //@"Data Source = (localdb)\MSSQLLocalDB;Integrated Security = True; Persist Security Info=False;Initial Catalog = nservicebus";
 
         //kernel.Bind<IDbConnection>().ToConstant(new SqlConnection(connectionString));
 
-        endpointConfiguration.UseContainer<NinjectBuilder>(
-            customizations: customizations =>
-            {
-                customizations.ExistingKernel(kernel);
-            });
 
-        endpointConfiguration.RegisterComponents(x => x.ConfigureComponent<ContextHelper>(DependencyLifecycle.InstancePerUnitOfWork));
+        //var builder = new ContainerBuilder();
+        //builder.RegisterType<OrderRepository>().As<IOrderRepository>();
+        //builder.RegisterType<OrderRepository2>().As<IOrderRepository2>();
+        //builder.RegisterType<ContextHelper>().As<ContextHelper>().in
+        //var container = builder.Build();
+        //endpointConfiguration.UseContainer<AutofacBuilder>(
+        //    customizations: customizations =>
+        //    {
+        //        customizations.ExistingLifetimeScope(container);
+        //    });
+
+
+        //endpointConfiguration.RegisterComponents(x => x.ConfigureComponent<ContextHelper>(DependencyLifecycle.InstancePerUnitOfWork));
+      
+        // endpointConfiguration.RegisterComponents(registration: x => x.ConfigureComponent<IDbTransaction>(componentFactory: c =>
+        //{
+
+        //    var ctxhelper = c.Build<ContextHelper>();
+        //    //var nsbProvider = new NSBContextProvider()
+        //    //{
+        //    //    dbConnection = ctxhelper.DbConnection,
+        //    //    dbTransaction = ctxhelper.DbTransaction,
+        //    //    Ref = ctxhelper.Ref
+        //    //};
+        //    //ctxhelper.PropertyChanged += nsbProvider.PropertyChangedEventHandler;
+        //    //return nsbProvider;
+        //    return ctxhelper.GetDbTransaction();
+        //}, dependencyLifecycle: DependencyLifecycle.InstancePerUnitOfWork));
+
+        // endpointConfiguration.RegisterComponents(registration: x => x.ConfigureComponent<IDbConnection>(componentFactory: c =>
+        // {
+
+        //     var ctxhelper = c.Build<ContextHelper>();
+        //     //var nsbProvider = new NSBContextProvider()
+        //     //{
+        //     //    dbConnection = ctxhelper.DbConnection,
+        //     //    dbTransaction = ctxhelper.DbTransaction,
+        //     //    Ref = ctxhelper.Ref
+        //     //};
+        //     //ctxhelper.PropertyChanged += nsbProvider.PropertyChangedEventHandler; 
+        //     //return nsbProvider;
+        //     return ctxhelper.getDbConnection();
+        // }, dependencyLifecycle: DependencyLifecycle.InstancePerUnitOfWork));
+
+        endpointConfiguration.RegisterComponents(registration: x => x.ConfigureComponent<IContextProvider>(componentFactory: c =>
+        {
+           var ctxhelper = c.Build<ContextHelper>();
+
+            var nsbProvider = new NSBContextProvider()
+            {
+                DbConnection = ctxhelper.getDbConnection(),
+                DbTransaction = ctxhelper.GetDbTransaction(),
+                Ref = ctxhelper.Ref
+            };
+            ctxhelper.PropertyChanged += nsbProvider.PropertyChangedEventHandler;
+            return nsbProvider;
+        }, dependencyLifecycle: DependencyLifecycle.InstancePerUnitOfWork));
 
         endpointConfiguration.Pipeline.Register<BaseHandlingBehavior.Registration>();
+        endpointConfiguration.PurgeOnStartup(true);
+        endpointConfiguration.LimitMessageProcessingConcurrencyTo(5);
 
+        endpointConfiguration.UseContainer<NinjectBuilder>(
+        customizations: customizations =>
+        {
+            customizations.ExistingKernel(kernel);
+        });
+
+        kernel.Bind<ContextHelper>().ToSelf().InThreadScope();
 
         var endpointInstance = await Endpoint.Start(endpointConfiguration)
             .ConfigureAwait(false);

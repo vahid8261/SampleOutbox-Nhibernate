@@ -9,20 +9,38 @@ namespace Reciever
     {
         private readonly IDbConnection _connection ;
         private readonly IDbTransaction _dbTransaction ;
+        private readonly IContextProvider _ctxProvider;
         private readonly ContextHelper _ctxHelper;
+
 
         protected BaseRepository(ContextHelper ctxHelper)
         {
             _ctxHelper = ctxHelper;
         }
 
-        protected BaseRepository(IDbConnection dbconnection)
+        protected BaseRepository(IContextProvider ctxProvider)
         {
-            _connection = dbconnection ;
+            _ctxProvider = ctxProvider;
         }
 
-        protected IDbConnection Connection => _ctxHelper != null ?_ctxHelper.dbConnection : _connection;
-        protected IDbTransaction Transaction => _ctxHelper?.dbTransaction;
+        //protected BaseRepository(IDbConnection dbconnection)
+        //{
+        //    _connection = dbconnection;
+        //    _dbTransaction = null;
+        //}
+
+        //protected BaseRepository(IDbConnection dbconnection, IDbTransaction dbTransaction)
+        //{
+        //    _connection = dbconnection;
+        //    _dbTransaction = dbTransaction;
+        //}
+
+        //protected IDbConnection Connection => _ctxHelper != null ? _ctxHelper.getDbConnection() : _connection;
+        //protected IDbTransaction Transaction => _ctxHelper?.GetDbTransaction();
+
+        protected IDbConnection Connection => _ctxProvider != null ? _ctxProvider.DbConnection : _connection;
+        protected IDbTransaction Transaction => _ctxProvider?.DbTransaction;
+
 
         public virtual async Task<int> Add(T item)
         {
