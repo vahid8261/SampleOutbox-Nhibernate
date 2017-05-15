@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Shared
+﻿namespace Shared
 {
-    public class Connectionstrings
+    public class ConnectionStrings
     {
-        public const string DatabaseConnection = @"Data Source = (localdb)\MSSQLLocalDB;Database=nservicebus;Integrated Security = True";
+        public const string NserviceBusConnection =
+            @"Data Source = (localdb)\MSSQLLocalDB;Database=nservicebus;Integrated Security = True";
     }
 }

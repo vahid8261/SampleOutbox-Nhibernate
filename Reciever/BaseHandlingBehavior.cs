@@ -4,6 +4,7 @@ using System.Data;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using NHibernate;
+using Ninject;
 using NServiceBus;
 using NServiceBus.Pipeline;
 
@@ -11,20 +12,12 @@ namespace Reciever
 {
     public class BaseHandlingBehavior : Behavior<IInvokeHandlerContext>
     {
-        //private ContextHelper _contextHelper;
-        public BaseHandlingBehavior(ContextHelper contextHelper)
-        {
-        //    _contextHelper = contextHelper;
-        }
-
         public override async Task Invoke(IInvokeHandlerContext context, Func<Task> next)
         {
-            //_contextHelper = _contextHelper ?? context.Builder.Build<ContextHelper>();
-            var _contextHelper = context.Builder.Build<ContextHelper>();
-            _contextHelper.SetDbTransaction(ExtractTransactionFromSession(context.SynchronizedStorageSession.Session()));
-            _contextHelper.setDbConnection(context.SynchronizedStorageSession.Session().Connection);
+            var contextHelper = context.Builder.Build<ContextHelper>();
+            contextHelper.SetDbTransaction(ExtractTransactionFromSession(context.SynchronizedStorageSession.Session()));
+            contextHelper.setDbConnection(context.SynchronizedStorageSession.Session().Connection);
             await next().ConfigureAwait(false);
-        //    context.Builder.Release(_contextHelper);    
 
         }
 
@@ -33,7 +26,6 @@ namespace Reciever
             public Registration()
                 : base(typeof(BaseHandlingBehavior).Name, typeof(BaseHandlingBehavior), "Database context behavior yo!")
             {
-
             }
         }
 
@@ -51,13 +43,11 @@ namespace Reciever
     {
         public ContextHelper()
         {
-            //_dbConnection = new SqlConnection();
             var rnd = new Random();
             Ref = new Ref()
             {
                 RefNumber = rnd.Next(1000)
             };
-            //dbTransaction = DbTransaction;
         }
 
         private IDbConnection _dbConnection;
@@ -85,7 +75,6 @@ namespace Reciever
         //public DbTransaction DbTransaction { get; set; }
 
         public Ref Ref;
-       
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName = null)
         {
