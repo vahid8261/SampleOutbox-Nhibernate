@@ -70,24 +70,13 @@ class Program
         var kernel = new StandardKernel();
         kernel.Bind<IOrderRepository>()
             .To<OrderRepository>();
+        kernel.Bind<IContextProvider>().To<NSBContextProvider>();
 
-        endpointConfiguration.RegisterComponents(registration: x => x.ConfigureComponent<IContextProvider>(componentFactory: c =>
-        {
-            var ctxhelper = c.Build<ContextHelper>();
-
-            var nsbProvider = new NSBContextProvider()
-            {
-                DbConnection = ctxhelper.getDbConnection(),
-                DbTransaction = ctxhelper.GetDbTransaction(),
-                Ref = ctxhelper.Ref
-            };
-            ctxhelper.PropertyChanged += nsbProvider.PropertyChangedEventHandler;
-            return nsbProvider;
-        }, dependencyLifecycle: DependencyLifecycle.InstancePerUnitOfWork));
-
+        endpointConfiguration.RegisterComponents(x => x.ConfigureComponent<NSBContextProvider>(DependencyLifecycle.InstancePerUnitOfWork));
         endpointConfiguration.Pipeline.Register<BaseHandlingBehavior.Registration>();
         endpointConfiguration.PurgeOnStartup(true);
-        endpointConfiguration.RegisterComponents(x=> x.ConfigureComponent<ContextHelper>(dependencyLifecycle:DependencyLifecycle.InstancePerUnitOfWork));
+        endpointConfiguration.RegisterComponents(x=> x.ConfigureComponent<ContextHelper>(DependencyLifecycle.InstancePerUnitOfWork));
+
         endpointConfiguration.UseContainer<NinjectBuilder>(
         customizations: customizations =>
         {

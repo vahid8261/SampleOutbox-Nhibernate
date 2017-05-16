@@ -12,11 +12,19 @@ namespace Reciever
 {
     public class BaseHandlingBehavior : Behavior<IInvokeHandlerContext>
     {
-        public override async Task Invoke(IInvokeHandlerContext context, Func<Task> next)
+        //private readonly IKernel _kernel;
+
+        //BaseHandlingBehavior(IKernel kernel)
+        //{
+        //    _kernel = kernel;
+        //}
+
+            public override async Task Invoke(IInvokeHandlerContext context, Func<Task> next)
         {
             var contextHelper = context.Builder.Build<ContextHelper>();
-            contextHelper.SetDbTransaction(ExtractTransactionFromSession(context.SynchronizedStorageSession.Session()));
-            contextHelper.setDbConnection(context.SynchronizedStorageSession.Session().Connection);
+            //var contextHelper = _kernel.Get<ContextHelper>();
+            contextHelper.DbTransaction = ExtractTransactionFromSession(context.SynchronizedStorageSession.Session());
+            contextHelper.DbConnection = context.SynchronizedStorageSession.Session().Connection;
             await next().ConfigureAwait(false);
 
         }
@@ -41,49 +49,32 @@ namespace Reciever
 
     public class ContextHelper : INotifyPropertyChanged
     {
+        private static long counter;
         public ContextHelper()
         {
-            var rnd = new Random();
-            Ref = new Ref()
-            {
-                RefNumber = rnd.Next(1000)
-            };
+            
+            //var rnd = new Random();
+            Ref = ++counter;
         }
 
         private IDbConnection _dbConnection;
-        public IDbConnection getDbConnection()
+        public IDbConnection DbConnection
         {
-            return _dbConnection;
+            get { return _dbConnection; }
+            set
+            {
+                _dbConnection = value;
+                OnPropertyChanged("DbConnection");
+            }
         }
-        public void setDbConnection(IDbConnection dbConnection)
-        {
-            _dbConnection = dbConnection;
-            OnPropertyChanged("DbTransaction");
-        }
+        public IDbTransaction DbTransaction { get; set; }
 
-        private IDbTransaction _dbTransaction;
-        public IDbTransaction GetDbTransaction()
-        {
-            return _dbTransaction;
-        }
-        public void SetDbTransaction(IDbTransaction dbTransaction)
-        {
-            _dbTransaction = dbTransaction;
-        }
 
-        //public DbConnection DbConnection { get; set; }
-        //public DbTransaction DbTransaction { get; set; }
-
-        public Ref Ref;
+        public long Ref;
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-    }
-
-    public class Ref
-    {
-        public int RefNumber { get; set; }
     }
 }
