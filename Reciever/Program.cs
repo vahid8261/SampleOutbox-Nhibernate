@@ -65,7 +65,8 @@ class Program
         var sagaPersistence = endpointConfiguration.UsePersistence<NHibernatePersistence, StorageType.Sagas>();
         sagaPersistence.UseConfiguration(outBoxhibernateConfig);
 
-        EnableOutbox(endpointConfiguration,true);
+        var outboxEnabled = true;
+        EnableOutbox(endpointConfiguration, outboxEnabled);
 
         #endregion
 
@@ -86,9 +87,9 @@ class Program
             .To<OrderRepository>();
         kernel.Bind<IOrderRepository2>()
             .To<OrderRepository2>();
-        kernel.Bind<IContextProvider>().To<NSBContextProvider>();
 
-
+        if (outboxEnabled)
+            kernel.Bind<IDbContextProvider>().To<NsbDbContextProvider>();
 
         endpointConfiguration.UseContainer<NinjectBuilder>(
         customizations: customizations =>
@@ -115,15 +116,16 @@ class Program
         if (enable)
         {
             endpoint.EnableOutbox();
-            endpoint.RegisterComponents(x => x.ConfigureComponent<NSBContextProvider>(DependencyLifecycle.InstancePerUnitOfWork));
+            endpoint.RegisterComponents(x => x.ConfigureComponent<NsbDbContextProvider>(DependencyLifecycle.InstancePerUnitOfWork));
+            endpoint.RegisterComponents(x => x.ConfigureComponent<DbContextHelper>(DependencyLifecycle.InstancePerUnitOfWork));
             endpoint.Pipeline.Register<BaseHandlingBehavior.Registration>();
             endpoint.PurgeOnStartup(true);
-            endpoint.RegisterComponents(x => x.ConfigureComponent<ContextHelper>(DependencyLifecycle.InstancePerUnitOfWork));
+
         }
         else
         {
             endpoint.RegisterComponents(x => x.ConfigureComponent<IDbConnection>(
-                factory =>new SqlConnection(ConnectionStrings.BusuinessConnection),
+                factory => new SqlConnection(ConnectionStrings.BusuinessConnection),
                 DependencyLifecycle.InstancePerUnitOfWork));
         }
 

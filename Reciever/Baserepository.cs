@@ -1,5 +1,4 @@
 ﻿using System.Data;
-using System.Data.Common;
 using System.Threading.Tasks;
 using Dapper.Contrib.Extensions;
 
@@ -7,20 +6,21 @@ namespace Reciever
 {
     public abstract class BaseRepository<T, TR> : IBaseRepository<T, TR> where T : class, IBaseEntity<TR>
     {
-        private readonly IDbConnection _connection ;
         private readonly IDbTransaction _dbTransaction ;
-        private readonly IContextProvider _ctxProvider;
-        protected BaseRepository(IContextProvider ctxProvider)
+        private readonly IDbConnection _dbConnection;
+        private readonly IDbContextProvider _ctxProvider;
+        
+        protected BaseRepository(IDbContextProvider ctxProvider)
         {
             _ctxProvider = ctxProvider;
         }
 
         protected BaseRepository(IDbConnection dbConnection)
         {
-            _connection = dbConnection;
+            _dbConnection = dbConnection;
         }
 
-        protected IDbConnection Connection => _ctxProvider != null ? _ctxProvider.DbConnection : _connection;
+        protected IDbConnection Connection => _ctxProvider != null ? _ctxProvider.DbConnection : _dbConnection;
         protected IDbTransaction Transaction => _ctxProvider != null ? _ctxProvider.DbTransaction : _dbTransaction;
 
 
@@ -31,17 +31,17 @@ namespace Reciever
 
         public virtual async Task<bool> Update(T item)
         {
-            return await _connection.UpdateAsync(item, _dbTransaction);
+            return await Connection.UpdateAsync(item, _dbTransaction);
         }
 
         public virtual async Task<bool> Remove(T item)
         {
-            return await _connection.DeleteAsync(item, _dbTransaction);
+            return await Connection.DeleteAsync(item, _dbTransaction);
         }
 
         public virtual async Task<T> GetById(TR id)
         {
-            return await _connection.GetAsync<T>(id, _dbTransaction);
+            return await Connection.GetAsync<T>(id, _dbTransaction);
         }
     }
 

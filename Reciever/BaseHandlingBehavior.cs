@@ -1,10 +1,7 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Data;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using NHibernate;
-using Ninject;
 using NServiceBus;
 using NServiceBus.Pipeline;
 
@@ -14,11 +11,12 @@ namespace Reciever
     {
             public override async Task Invoke(IInvokeHandlerContext context, Func<Task> next)
         {
-            var contextHelper = context.Builder.Build<ContextHelper>();
-           contextHelper.DbTransaction = ExtractTransactionFromSession(context.SynchronizedStorageSession.Session());
-            contextHelper.DbConnection = context.SynchronizedStorageSession.Session().Connection;
-            await next().ConfigureAwait(false);
+            var contextHelper = context.Builder.Build<DbContextHelper>();
 
+            contextHelper.DbConnection = context.SynchronizedStorageSession.Session().Connection;
+            contextHelper.DbTransaction = ExtractTransactionFromSession(context.SynchronizedStorageSession.Session());
+            
+            await next().ConfigureAwait(false);
         }
 
         public class Registration : RegisterStep
@@ -39,34 +37,25 @@ namespace Reciever
         }
     }
 
-    public class ContextHelper : INotifyPropertyChanged
+    public class DbContextHelper
     {
         private static long counter;
-        public ContextHelper()
+        public DbContextHelper()
         {
-            
             //var rnd = new Random();
             Ref = ++counter;
         }
+        
 
-        private IDbConnection _dbConnection;
-        public IDbConnection DbConnection
+        public IDbConnection getDbConnection()
         {
-            get { return _dbConnection; }
-            set
-            {
-                _dbConnection = value;
-                OnPropertyChanged("DbConnection");
-            }
+            return DbConnection;
         }
-        public IDbTransaction DbTransaction { get; set; }
 
+        public IDbConnection DbConnection { get; internal set; }
+
+        public IDbTransaction DbTransaction { get; internal set; }
 
         public long Ref;
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected virtual void OnPropertyChanged(string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
     }
 }

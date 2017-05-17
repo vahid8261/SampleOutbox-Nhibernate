@@ -4,29 +4,25 @@ using System.Data;
 
 namespace Reciever
 {
-    public class NSBContextProvider : IContextProvider
+    public class NsbDbContextProvider : IDbContextProvider
     {
-        public IDbTransaction DbTransaction { get; set; }
-        public IDbConnection DbConnection { get; set; }
+        private readonly DbContextHelper _dbContextHelper;
 
-        public void PropertyChangedEventHandler(object sender, PropertyChangedEventArgs e)
+        public NsbDbContextProvider(DbContextHelper dbContextHelper)
         {
-            this.DbTransaction = ((ContextHelper)sender).DbTransaction;
-            this.DbConnection = ((ContextHelper)sender).DbConnection;
+            _dbContextHelper = dbContextHelper;
         }
 
-        public NSBContextProvider(ContextHelper ctx)
-        {
-            ctx.PropertyChanged += PropertyChangedEventHandler;
-        }
+        public IDbConnection DbConnection => _dbContextHelper.DbConnection;
 
+        public IDbTransaction DbTransaction => _dbContextHelper.DbTransaction;
     }
 
 
-    public interface IContextProvider
+    public interface IDbContextProvider
     {
-        IDbTransaction DbTransaction { get; set; }
-        IDbConnection DbConnection { get; set; }
-        void PropertyChangedEventHandler(object sender, PropertyChangedEventArgs e);
+        IDbTransaction DbTransaction { get; }
+
+        IDbConnection DbConnection { get; }
     }
 }

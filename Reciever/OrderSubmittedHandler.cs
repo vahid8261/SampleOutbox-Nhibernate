@@ -23,6 +23,10 @@ namespace Reciever
             _orderrepository = orderrepository;
         }
 
+        //public OrderSubmittedHandler(IKernel kernel)
+        //{
+
+        //}
 
         public async Task Handle(OrderSubmitted message, IMessageHandlerContext context)
         {
