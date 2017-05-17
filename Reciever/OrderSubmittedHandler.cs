@@ -3,6 +3,7 @@ using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
+using System.Transactions;
 using NHibernate;
 using Ninject;
 using NServiceBus;
@@ -34,12 +35,22 @@ namespace Reciever
                 Value = message.Value
             };
 
-            await _orderrepository.Add(orderAccepted);
+            if (FeatureToggle.OutBoxEnabled)
+                await _orderrepository.Add(orderAccepted);
+            else
+            {
+                using (var tran = new TransactionScope(TransactionScopeOption.RequiresNew, TransactionScopeAsyncFlowOption.Enabled))
+                {
 
-            //if (ChaosGenerator.Next(2) == 0)
-            //{
-            //    throw new Exception("Boom!");
-            //}
+                    await _orderrepository.Add(orderAccepted);
+                    tran.Complete();
+                }
+        }
+
+            if (ChaosGenerator.Next(2) == 0)
+            {
+                throw new Exception("Boom!");
+            }
             #endregion
         }
     }

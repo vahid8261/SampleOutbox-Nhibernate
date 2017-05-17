@@ -1,25 +1,22 @@
-﻿//using System;
-//using System.Data;
+﻿using System;
+using System.Data;
 
-//namespace Reciever
-//{
-//    public class OrderRepository2 : BaseRepository<Order2, Guid>, IOrderRepository2
-//    {
-//        public OrderRepository2(IContextProvider ctxHelper) : base(ctxHelper)
-//        {
-//        }
-//        public OrderRepository2(IDbConnection connection) : base(connection)
-//        {
-//        }
-//    }
+namespace Reciever
+{
+    public class OrderRepository2 : BaseRepository<Order2, Guid>, IOrderRepository2
+    {
+        public OrderRepository2(IContextProvider ctxProvider) : base(ctxProvider)
+        {
+        }
+    }
 
-//    public interface IOrderRepository2 : IBaseRepository<Order2, Guid>
-//    {
-//    }
+    public interface IOrderRepository2 : IBaseRepository<Order2, Guid>
+    {
+    }
 
-//    public class Order2 : IBaseEntity<Guid>
-//    {
-//        public Guid OrderId { get; set; }
-//        public string Value { get; set; }
-//    }
-//}
+    public class Order2 : IBaseEntity<Guid>
+    {
+        public Guid OrderId { get; set; }
+        public string Value { get; set; }
+    }
+}

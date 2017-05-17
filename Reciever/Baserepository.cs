@@ -10,33 +10,15 @@ namespace Reciever
         private readonly IDbConnection _connection ;
         private readonly IDbTransaction _dbTransaction ;
         private readonly IContextProvider _ctxProvider;
-        //private readonly ContextHelper _ctxProvider;
-
-
-        //protected BaseRepository(ContextHelper ctxProvider)
-        //{
-        //    _ctxProvider = ctxProvider;
-        //}
-
         protected BaseRepository(IContextProvider ctxProvider)
         {
             _ctxProvider = ctxProvider;
         }
 
-        //protected BaseRepository(IDbConnection dbconnection)
-        //{
-        //    _connection = dbconnection;
-        //    _dbTransaction = null;
-        //}
-
-        //protected BaseRepository(IDbConnection dbconnection, IDbTransaction dbTransaction)
-        //{
-        //    _connection = dbconnection;
-        //    _dbTransaction = dbTransaction;
-        //}
-
-        //protected IDbConnection Connection => _ctxHelper != null ? _ctxHelper.getDbConnection() : _connection;
-        //protected IDbTransaction Transaction => _ctxHelper?.GetDbTransaction();
+        protected BaseRepository(IDbConnection dbConnection)
+        {
+            _connection = dbConnection;
+        }
 
         protected IDbConnection Connection => _ctxProvider != null ? _ctxProvider.DbConnection : _connection;
         protected IDbTransaction Transaction => _ctxProvider != null ? _ctxProvider.DbTransaction : _dbTransaction;

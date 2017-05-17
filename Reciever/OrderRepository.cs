@@ -8,17 +8,6 @@ namespace Reciever
         public OrderRepository(IContextProvider ctxProvider) : base(ctxProvider)
         {
         }
-        //public OrderRepository(IDbConnection connection) : base(connection)
-        //{
-        //}
-        //public OrderRepository(IDbConnection connection, IDbTransaction dbTransaction) : base(connection, dbTransaction)
-        //{
-        //}
-
-        //public OrderRepository(ContextHelper ctxHelper) : base(ctxHelper)
-        //{
-        //}
-
     }
 
     public interface IOrderRepository : IBaseRepository<Order, Guid>

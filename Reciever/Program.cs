@@ -34,6 +34,13 @@ class Program
             x.Dialect<MsSql2012Dialect>();
         });
 
+        var outBoxhibernateConfig = new NHibernate.Cfg.Configuration();
+        outBoxhibernateConfig.DataBaseIntegration(x =>
+        {
+            x.ConnectionString = ConnectionStrings.BusuinessConnection;
+            x.Dialect<MsSql2012Dialect>();
+        });
+        outBoxhibernateConfig.SetProperty("default_schema", "dbo");
         #endregion
 
         var endpointConfiguration = new EndpointConfiguration("Samples.SQLNHibernateOutbox.Receiver");
@@ -43,6 +50,7 @@ class Program
         var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
         transport.ConnectionString(ConnectionStrings.NserviceBusConnection);
 
+        
         var routing = transport.Routing();
         routing.RouteToEndpoint(typeof(OrderSubmitted).Assembly, "Samples.SQLNHibernateOutboxEF.Sender");
         routing.RegisterPublisher(typeof(OrderSubmitted).Assembly, "Samples.SQLNHibernateOutboxEF.Sender");
@@ -51,7 +59,13 @@ class Program
         var persistence = endpointConfiguration.UsePersistence<NHibernatePersistence>();
         persistence.UseConfiguration(hibernateConfig);
 
-        endpointConfiguration.EnableOutbox();
+        var outboxpersistence = endpointConfiguration.UsePersistence<NHibernatePersistence, StorageType.Outbox>();
+        outboxpersistence.UseConfiguration(outBoxhibernateConfig);
+
+        var sagaPersistence = endpointConfiguration.UsePersistence<NHibernatePersistence, StorageType.Sagas>();
+        sagaPersistence.UseConfiguration(outBoxhibernateConfig);
+
+        EnableOutbox(endpointConfiguration,true);
 
         #endregion
 
@@ -70,12 +84,11 @@ class Program
         var kernel = new StandardKernel();
         kernel.Bind<IOrderRepository>()
             .To<OrderRepository>();
+        kernel.Bind<IOrderRepository2>()
+            .To<OrderRepository2>();
         kernel.Bind<IContextProvider>().To<NSBContextProvider>();
 
-        endpointConfiguration.RegisterComponents(x => x.ConfigureComponent<NSBContextProvider>(DependencyLifecycle.InstancePerUnitOfWork));
-        endpointConfiguration.Pipeline.Register<BaseHandlingBehavior.Registration>();
-        endpointConfiguration.PurgeOnStartup(true);
-        endpointConfiguration.RegisterComponents(x=> x.ConfigureComponent<ContextHelper>(DependencyLifecycle.InstancePerUnitOfWork));
+
 
         endpointConfiguration.UseContainer<NinjectBuilder>(
         customizations: customizations =>
@@ -95,5 +108,25 @@ class Program
             await endpointInstance.Stop()
                 .ConfigureAwait(false);
         }
+    }
+
+    private static void EnableOutbox(EndpointConfiguration endpoint, bool enable)
+    {
+        if (enable)
+        {
+            endpoint.EnableOutbox();
+            endpoint.RegisterComponents(x => x.ConfigureComponent<NSBContextProvider>(DependencyLifecycle.InstancePerUnitOfWork));
+            endpoint.Pipeline.Register<BaseHandlingBehavior.Registration>();
+            endpoint.PurgeOnStartup(true);
+            endpoint.RegisterComponents(x => x.ConfigureComponent<ContextHelper>(DependencyLifecycle.InstancePerUnitOfWork));
+        }
+        else
+        {
+            endpoint.RegisterComponents(x => x.ConfigureComponent<IDbConnection>(
+                factory =>new SqlConnection(ConnectionStrings.BusuinessConnection),
+                DependencyLifecycle.InstancePerUnitOfWork));
+        }
+
+        FeatureToggle.OutBoxEnabled = enable;
     }
 }

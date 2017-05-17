@@ -12,18 +12,10 @@ namespace Reciever
 {
     public class BaseHandlingBehavior : Behavior<IInvokeHandlerContext>
     {
-        //private readonly IKernel _kernel;
-
-        //BaseHandlingBehavior(IKernel kernel)
-        //{
-        //    _kernel = kernel;
-        //}
-
             public override async Task Invoke(IInvokeHandlerContext context, Func<Task> next)
         {
             var contextHelper = context.Builder.Build<ContextHelper>();
-            //var contextHelper = _kernel.Get<ContextHelper>();
-            contextHelper.DbTransaction = ExtractTransactionFromSession(context.SynchronizedStorageSession.Session());
+           contextHelper.DbTransaction = ExtractTransactionFromSession(context.SynchronizedStorageSession.Session());
             contextHelper.DbConnection = context.SynchronizedStorageSession.Session().Connection;
             await next().ConfigureAwait(false);
 
