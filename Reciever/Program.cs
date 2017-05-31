@@ -120,7 +120,7 @@ class Program
             endpoint.RegisterComponents(x => x.ConfigureComponent<DbContextHelper>(DependencyLifecycle.InstancePerUnitOfWork));
             endpoint.Pipeline.Register<BaseHandlingBehavior.Registration>();
             endpoint.PurgeOnStartup(true);
-
+            endpoint.ExecuteTheseHandlersFirst(typeof(OrderSubmittedHandler), typeof(OrderSaga));
         }
         else
         {

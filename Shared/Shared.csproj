@@ -48,6 +48,7 @@
     <Compile Include="Connectionstrings.cs" />
     <Compile Include="OrderSubmitted.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SaveOrder.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
