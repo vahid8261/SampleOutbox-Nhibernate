@@ -14,45 +14,17 @@ namespace Reciever
 {
     public class OrderSubmittedHandler : IHandleMessages<OrderSubmitted>
     {
-        private IOrderRepository _orderrepository;
         static ILog log = LogManager.GetLogger<OrderSubmittedHandler>();
         private Random ChaosGenerator = new Random();
 
-        public OrderSubmittedHandler(IOrderRepository orderrepository)
+        public OrderSubmittedHandler()
         {
-            _orderrepository = orderrepository;
         }
 
         public async Task Handle(OrderSubmitted message, IMessageHandlerContext context)
         {
             log.Info($"Order {context.MessageId} with orderid {message.OrderId} submitted");
 
-            #region StoreUserData
-
-            var orderAccepted = new Order()
-            {
-                OrderId = message.OrderId,
-                Value = message.Value
-            };
-
-            if (FeatureToggle.OutBoxEnabled)
-                await _orderrepository.Add(orderAccepted);
-            else
-            {
-                using (var tran = new TransactionScope(TransactionScopeOption.RequiresNew,
-                    TransactionScopeAsyncFlowOption.Enabled))
-                {
-                    await _orderrepository.Add(orderAccepted);
-                    tran.Complete();
-                }
-            }
-
-            //if (ChaosGenerator.Next(2) == 0)
-            //{
-            //    throw new Exception("Boom!");
-            //}
-
-            #endregion
         }
     }
 }
