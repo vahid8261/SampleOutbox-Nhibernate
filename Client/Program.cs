@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using NHibernate.Cfg;
 using NHibernate.Dialect;
 using NServiceBus;
+using NServiceBus.Persistence.Sql;
 using NServiceBus.Transport.SQLServer;
 using Shared;
 
@@ -20,14 +22,14 @@ class Program
         const string letters = "ABCDEFGHIJKLMNOPQRSTUVXYZ";
         var random = new Random();
 
-        var hibernateConfig = new Configuration();
-        hibernateConfig.DataBaseIntegration(x =>
-        {
-            x.ConnectionStringName = "NServiceBus/Persistence";
-            x.Dialect<MsSql2012Dialect>();
-        });
+        //var hibernateConfig = new Configuration();
+        //hibernateConfig.DataBaseIntegration(x =>
+        //{
+        //    x.ConnectionStringName = "NServiceBus/Persistence";
+        //    x.Dialect<MsSql2012Dialect>();
+        //});
 
-        hibernateConfig.SetProperty("default_schema", "dbo");
+        //hibernateConfig.SetProperty("default_schema", "dbo");
 
         var endpointConfiguration = new EndpointConfiguration("Samples.SQLNHibernateOutboxEF.Sender");
         endpointConfiguration.UseSerialization<JsonSerializer>();
@@ -42,9 +44,17 @@ class Program
         transport.DefaultSchema("dbo");
         transport.UseSchemaForQueue("error", "dbo");
         transport.UseSchemaForQueue("audit", "dbo");
+        transport.Transactions(TransportTransactionMode.SendsAtomicWithReceive);
 
-        endpointConfiguration.UsePersistence<NHibernatePersistence>();
-        endpointConfiguration.EnableOutbox();
+        var persistence = endpointConfiguration.UsePersistence<SqlPersistence>();
+        persistence.SqlVariant(SqlVariant.MsSqlServer);
+        persistence.ConnectionBuilder(
+    connectionBuilder: () => new SqlConnection(ConnectionStrings.NserviceBusConnection));
+
+        var subscriptions = persistence.SubscriptionSettings();
+        subscriptions.CacheFor(TimeSpan.FromMinutes(1));
+
+       // endpointConfiguration.EnableOutbox();
 
         #endregion
 

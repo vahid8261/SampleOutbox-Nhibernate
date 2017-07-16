@@ -47,10 +47,10 @@ namespace Reciever
                 }
             }
 
-            if (ChaosGenerator.Next(2) == 0)
-            {
-                throw new Exception("Boom!");
-            }
+            //if (ChaosGenerator.Next(2) == 0)
+            //{
+            //    throw new Exception("Boom!");
+            //}
 
             #endregion
         }

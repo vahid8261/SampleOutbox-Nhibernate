@@ -11,6 +11,7 @@ using Ninject;
 using NServiceBus;
 using NServiceBus.ObjectBuilder.Ninject;
 using NServiceBus.Persistence;
+using NServiceBus.Persistence.Sql;
 using Reciever;
 using Shared;
 using Configuration = NHibernate.Cfg.Configuration;
@@ -56,14 +57,23 @@ class Program
         routing.RegisterPublisher(typeof(OrderSubmitted).Assembly, "Samples.SQLNHibernateOutboxEF.Sender");
 
 
-        var persistence = endpointConfiguration.UsePersistence<NHibernatePersistence>();
-        persistence.UseConfiguration(hibernateConfig);
+        //var persistence = endpointConfiguration.UsePersistence<NHibernatePersistence>();
+        //persistence.UseConfiguration(hibernateConfig);
 
-        var outboxpersistence = endpointConfiguration.UsePersistence<NHibernatePersistence, StorageType.Outbox>();
-        outboxpersistence.UseConfiguration(outBoxhibernateConfig);
+        //var outboxpersistence = endpointConfiguration.UsePersistence<NHibernatePersistence, StorageType.Outbox>();
+        //outboxpersistence.UseConfiguration(outBoxhibernateConfig);
 
-        var sagaPersistence = endpointConfiguration.UsePersistence<NHibernatePersistence, StorageType.Sagas>();
-        sagaPersistence.UseConfiguration(outBoxhibernateConfig);
+        //var sagaPersistence = endpointConfiguration.UsePersistence<NHibernatePersistence, StorageType.Sagas>();
+        //sagaPersistence.UseConfiguration(outBoxhibernateConfig);
+
+        var persistence = endpointConfiguration.UsePersistence<SqlPersistence>();
+        persistence.SqlVariant(SqlVariant.MsSqlServer);
+        persistence.ConnectionBuilder(
+            connectionBuilder: () => new SqlConnection(ConnectionStrings.NserviceBusConnection));
+
+        var subscriptions = persistence.SubscriptionSettings();
+        subscriptions.CacheFor(TimeSpan.FromMinutes(1));
+
 
         var outboxEnabled = true;
         EnableOutbox(endpointConfiguration, outboxEnabled);
@@ -120,7 +130,7 @@ class Program
             endpoint.RegisterComponents(x => x.ConfigureComponent<DbContextHelper>(DependencyLifecycle.InstancePerUnitOfWork));
             endpoint.Pipeline.Register<BaseHandlingBehavior.Registration>();
             endpoint.PurgeOnStartup(true);
-            endpoint.ExecuteTheseHandlersFirst(typeof(OrderSubmittedHandler), typeof(OrderSaga));
+           // endpoint.ExecuteTheseHandlersFirst(typeof(OrderSubmittedHandler), typeof(OrderSaga));
         }
         else
         {
