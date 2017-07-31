@@ -4,7 +4,6 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 using System.Transactions;
-using NHibernate;
 using Ninject;
 using NServiceBus;
 using NServiceBus.Logging;

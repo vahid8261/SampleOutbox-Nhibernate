@@ -3,9 +3,7 @@ using System.Data;
 using System.Data.Odbc;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
-using Autofac;
-using NHibernate.Cfg;
-using NHibernate.Dialect;
+
 using Ninject;
 using NServiceBus;
 using NServiceBus.ObjectBuilder.Ninject;
@@ -13,8 +11,7 @@ using NServiceBus.Persistence;
 using NServiceBus.Persistence.Sql;
 using Reciever;
 using Shared;
-using StructureMap;
-using Configuration = NHibernate.Cfg.Configuration;
+
 
 class Program
 {
@@ -34,10 +31,10 @@ class Program
         var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
         transport.ConnectionString(ConnectionStrings.NserviceBusConnection);
 
-        
-        var routing = transport.Routing();
-        routing.RouteToEndpoint(typeof(OrderSubmitted).Assembly, "Samples.SQLNHibernateOutboxEF.Sender");
-        routing.RegisterPublisher(typeof(OrderSubmitted).Assembly, "Samples.SQLNHibernateOutboxEF.Sender");
+
+        //var routing = transport.Routing();
+        //routing.RouteToEndpoint(typeof(OrderSubmitted).Assembly, "Samples.SQLNHibernateOutboxEF.Sender");
+        //routing.RegisterPublisher(typeof(OrderSubmitted).Assembly, "Samples.SQLNHibernateOutboxEF.Sender");
 
         var persistence = endpointConfiguration.UsePersistence<SqlPersistence>();
         persistence.SqlVariant(SqlVariant.MsSqlServer);

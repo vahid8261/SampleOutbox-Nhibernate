@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Data.SqlClient;
-using System.Linq;
 using System.Threading.Tasks;
-using NHibernate.Cfg;
-using NHibernate.Dialect;
 using NServiceBus;
+using NServiceBus.Features;
 using NServiceBus.Persistence.Sql;
 using NServiceBus.Transport.SQLServer;
 using Shared;
@@ -46,15 +44,23 @@ class Program
         transport.UseSchemaForQueue("audit", "dbo");
         transport.Transactions(TransportTransactionMode.SendsAtomicWithReceive);
 
+        //endpointConfiguration.DisableFeature<MessageDrivenSubscriptions>();
+
         var persistence = endpointConfiguration.UsePersistence<SqlPersistence>();
         persistence.SqlVariant(SqlVariant.MsSqlServer);
         persistence.ConnectionBuilder(
     connectionBuilder: () => new SqlConnection(ConnectionStrings.NserviceBusConnection));
 
+        var routing = transport.Routing();
+        routing.RouteToEndpoint(typeof(OrderSubmitted).Assembly, "Samples.SQLNHibernateOutboxEF.Reciever");
+
+
         var subscriptions = persistence.SubscriptionSettings();
         subscriptions.CacheFor(TimeSpan.FromMinutes(1));
 
-       // endpointConfiguration.EnableOutbox();
+        // endpointConfiguration.EnableOutbox();
+
+        endpointConfiguration.SendOnly();
 
         #endregion
 
@@ -76,12 +82,12 @@ class Program
                     return;
                 }
                 //var orderId = new string(Enumerable.Range(0, 4).Select(x => letters[random.Next(letters.Length)]).ToArray());
-                var orderSubmitted = new OrderSubmitted
+                var orderSubmitted = new 
                 {
                     OrderId = Guid.NewGuid(),
                     Value = random.Next(100).ToString()
                 };
-                await endpointInstance.Publish(orderSubmitted)
+                await endpointInstance.Send(orderSubmitted)
                     .ConfigureAwait(false);
             }
         }
